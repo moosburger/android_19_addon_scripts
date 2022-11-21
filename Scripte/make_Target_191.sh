@@ -24,11 +24,17 @@
 ##########################################################################################################
 # Python Versionscheck und Warnung
 ##########################################################################################################
+
+export PYENV_ROOT="$HOME/.pyenv"
+command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+pyenv shell 3.8.10
+
 version=$(python -V 2>&1 | grep -Po '(?<=Python )(.+)')
 version=$(echo "${version//}")
 IFS='.' read -ra ADDR <<< "$version"
 
-echo "Python Version $version!"
+echo "Python Version: $version"
 
 ##########################################################################################################
 # Import
@@ -42,7 +48,7 @@ AntPlusBuild=true
 #++++++++++++++++++++++++++++++++++#
 #++++++++++++++++++++++++++++++++++#
 # Beenden nachdem alles aktualisiert wurde
-checkBuildOnly=true
+checkBuildOnly=false
 #++++++++++++++++++++++++++++++++++#
 #++++++++++++++++++++++++++++++++++#
 
@@ -53,7 +59,7 @@ cleanOnly=false
 
 #++++++++++++++++++++++++++++++++++#
 # Synchen des Repos
-repoSync=true
+repoSync=false
 #++++++++++++++++++++++++++++++++++#
 
 ##########################################################################################################
@@ -64,6 +70,7 @@ buildDate=$(date +%Y%m%d)
 
 RootPfad=$PWD
 AndroidPath=lineage-19.1
+RepoCmd=$RootPfad/bin/repo
 CertPfad=$PWD
 limitCpu=false
 clearBuild=false
@@ -73,34 +80,37 @@ rebuild=false
 
 #~ vendorFolder="android_vendor_google_sunfish"
 
+appfolder="android_vendor_google_sunfish_proprietary_app"
+
 maxArrCnt=0
 patchfolder="packages"
+scriptFolder="android_19_addon_scripts"
 declare -A FilePatch
 spoofing1=0
 FilePatch[$spoofing1,0]="Signature Spoofing"
-FilePatch[$spoofing1,1]="$RootPfad/LOS/$patchfolder/modifizierte/microG/signature_spoofing_patches/android_frameworks_base-S.patch"
+FilePatch[$spoofing1,1]="$RootPfad/LOS/$patchfolder/$scriptFolder/microG/signature_spoofing_patches/android_frameworks_base-S.patch"
 FilePatch[$spoofing1,2]="$RootPfad/LOS/$AndroidPath/frameworks/base"
 
 spoofing2=1
 FilePatch[$spoofing2,0]="Signature Spoofing"
-FilePatch[$spoofing2,1]="$RootPfad/LOS/$patchfolder/modifizierte/microG/signature_spoofing_patches/packages_modules_Permission-S.patch"
+FilePatch[$spoofing2,1]="$RootPfad/LOS/$patchfolder/$scriptFolder/microG/signature_spoofing_patches/packages_modules_Permission-S.patch"
 FilePatch[$spoofing2,2]="$RootPfad/LOS/$AndroidPath/packages/modules/Permission"
 
 NtpServer=2
 FilePatch[$NtpServer,0]="Ntp Server"
-FilePatch[$NtpServer,1]="$RootPfad/LOS/$patchfolder/modifizierte/deGoogle/frameworks_base_core_res_res_values_config.patch"
+FilePatch[$NtpServer,1]="$RootPfad/LOS/$patchfolder/$scriptFolder/deGoogle/frameworks_base_core_res_res_values_config.patch"
 FilePatch[$NtpServer,2]="$RootPfad/LOS/$AndroidPath/frameworks/base"
 
 CapPort=3
 FilePatch[$CapPort,0]="Captive Portal check"
-FilePatch[$CapPort,1]="$RootPfad/LOS/$patchfolder/modifizierte/deGoogle/packages_modules_NetworkStack_res_values_config.patch"
+FilePatch[$CapPort,1]="$RootPfad/LOS/$patchfolder/$scriptFolder/deGoogle/packages_modules_NetworkStack_res_values_config.patch"
 FilePatch[$CapPort,2]="$RootPfad/LOS/$AndroidPath/packages/modules/NetworkStack"
 
 if [ $AntPlusBuild = true ]
 then
     AntPlus=4
     FilePatch[$AntPlus,0]="Ant+"
-    FilePatch[$AntPlus,1]="$RootPfad/LOS/$patchfolder/modifizierte/Ant+/ant+AirplaneMode.patch"
+    FilePatch[$AntPlus,1]="$RootPfad/LOS/$patchfolder/$scriptFolder/Ant+/ant+AirplaneMode.patch"
     FilePatch[$AntPlus,2]="$RootPfad/LOS/$AndroidPath/frameworks/base"
 fi
 
@@ -384,8 +394,8 @@ echo "- Ant+ integriert: $AntPlusBuild"
 echo "-Check Build Only: $checkBuildOnly"
 echo "-  Nur aufrauumen: $cleanOnly"
 echo "-    Repo synchen: $repoSync"
-echo "-       Repo Pick: $repoPick"
-echo
+#echo "-       Repo Pick: $repoPick"
+#echo
 
 # was bauen
 whatToBuild
@@ -419,7 +429,7 @@ echo
 echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "+++++++++++++++++++++++++++++++++++ Init Repo +++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-repo init -u https://github.com/LineageOS/android.git -b $AndroidPath
+$RepoCmd init -u https://github.com/LineageOS/android.git -b $AndroidPath
 
 if [ $? -ne 0 ]
 then
@@ -433,7 +443,7 @@ then
     echo "+++++++++++++++++++++++++++++++++++ Sync Repo +++++++++++++++++++++++++++++++++++++++++++++++++++++++"
     echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
     echo -c --force-remove-dirty --force-sync --verbose
-    repo sync -c --force-remove-dirty --force-sync --verbose
+    $RepoCmd sync -c --force-remove-dirty --force-sync --verbose
     echo
 
     if [ $? -ne 0 ]
@@ -494,14 +504,20 @@ do
 
 ##########################################################################################################
 # meine git Repos synchen
-#~ ##########################################################################################################
-    #~ echo
-    #~ echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-    #~ echo "+++++++++++++++++++++++++++++++++++ sync git repo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-    #~ echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+##########################################################################################################
+    echo
+    echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+    echo "+++++++++++++++++++++++++++++++++++ sync git repo +++++++++++++++++++++++++++++++++++++++++++++++++++"
+    echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 
     #Backup aktuellen Pfad
     lstPath=$PWD
+
+    echo - vendor/partner_gms synchen
+    cd $RootPfad/LOS/$AndroidPath/vendor/partner_gms
+    echo $PWD
+    git config --get remote.origin.url
+    git pull
 
     #zurueck in den Pfad
     cd $lstPath
@@ -518,37 +534,31 @@ do
     then
         echo - external/ant-wireless kopieren
         rm -rf external/ant-wireless
-        cp -r $RootPfad/LOS/$patchfolder/modifizierte/Ant+/android_external_ant-wireless/ ./external/ant-wireless/
+        cp -r $RootPfad/LOS/$patchfolder/$scriptFolder/Ant+/android_external_ant-wireless/ ./external/ant-wireless/
         rm -rf external/ant-wireless/.git
         echo - done
         echo
     fi
 
-    #~ echo - MagicEarth kopieren
-    #~ rm -rf ./vendor/google/sunfish/proprietary/product/app/MagicEarth
-    #~ cp -r $RootPfad/LOS/$patchfolder/modifizierte/MagicEarth/App/ ./vendor/google/sunfish/proprietary/product/app/MagicEarth/
-    #~ echo - done
-    #~ echo
-
     echo - vendor/lineage/overlay erstellen
     mkdir -p "$RootPfad/LOS/$AndroidPath/vendor/lineage/overlay/microg/frameworks/base/core/res/res/values/"
     # Override device-specific settings for the location providers
-    cp $RootPfad/LOS/$patchfolder/modifizierte/microG/signature_spoofing_patches/frameworks_base_config.xml "$RootPfad/LOS/$AndroidPath/vendor/lineage/overlay/microg/frameworks/base/core/res/res/values/config.xml"
+    cp $RootPfad/LOS/$patchfolder/$scriptFolder/microG/signature_spoofing_patches/frameworks_base_config.xml "$RootPfad/LOS/$AndroidPath/vendor/lineage/overlay/microg/frameworks/base/core/res/res/values/config.xml"
     sed -i "1s;^;\n# Set up microg overlay\nPRODUCT_PACKAGE_OVERLAYS += vendor/lineage/overlay/microg\n\n;" "$RootPfad/LOS/$AndroidPath/vendor/lineage/config/common.mk"
     echo - done
     echo
 
     echo - Google Kamera kopieren
     rm -rf ./vendor/google/sunfish/proprietary/product/app/GoogleCamera/GoogleCamera.apk
-    cp -r $RootPfad/LOS/$patchfolder/modifizierte/GoogleCamera/Gcam_8.3.252_V2.0c_MWP.apk ./vendor/google/sunfish/proprietary/product/app/GoogleCamera/GoogleCamera.apk
+    cp -r $RootPfad/LOS/$patchfolder/$appfolder/GoogleCamera/Gcam_8.3.252_V2.0c_MWP.apk ./vendor/google/sunfish/proprietary/product/app/GoogleCamera/GoogleCamera.apk
     echo - done
     echo
 
     echo - vendor/lineage/bootanimation kopieren
-    rm ./vendor/lineage/bootanimation/bootanimation.tar
-    rm ./vendor/lineage/bootanimation/desc.txt
-    cp -r $RootPfad/LOS/$patchfolder/modifizierte/BootAnimation/bootanimationRing/bootanimation.tar ./vendor/lineage/bootanimation/bootanimation.tar
-    cp -r $RootPfad/LOS/$patchfolder/modifizierte/BootAnimation/bootanimationRing/desc.txt ./vendor/lineage/bootanimation/desc.txt
+    rm -rf ./vendor/lineage/bootanimation/bootanimation.tar
+    rm -rf ./vendor/lineage/bootanimation/desc.txt
+    cp -r $RootPfad/LOS/$patchfolder/$scriptFolder/BootAnimation/bootanimationRing/bootanimation.tar ./vendor/lineage/bootanimation/bootanimation.tar
+    cp -r $RootPfad/LOS/$patchfolder/$scriptFolder/BootAnimation/bootanimationRing/desc.txt ./vendor/lineage/bootanimation/desc.txt
     echo - done
 
     echo
@@ -650,10 +660,10 @@ echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 echo "+++++++++++++++++++++++++++++++++++ verschiebe Build ++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo
-#if [ -f $RootPfad/$target-files-signed.zip ]
-#then
-#    rm $RootPfad/$target-files-signed.zip
-#fi
+if [ -f $RootPfad/$target-files-signed.zip ]
+then
+    rm $RootPfad/$target-files-signed.zip
+fi
 
 # Kopieren und umbenennen
 if [ -f $RootPfad/$target-ota-update.zip ]
