@@ -1,0 +1,15 @@
+diff --git a/device.mk b/device.mk
+index 27c4c033..49684a59 100644
+--- a/device.mk
++++ b/device.mk
+@@ -923,3 +923,10 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/virtual_ab_ota_retrofit.mk)
+ # Set system properties identifying the chipset
+ PRODUCT_VENDOR_PROPERTIES += ro.soc.manufacturer=Qualcomm
+ PRODUCT_VENDOR_PROPERTIES += ro.soc.model=SM7150
++
++
++# Ant+ Support
++ifneq ($(BOARD_ANT_WIRELESS_DEVICE),)
++$(call inherit-product, external/ant-wireless/build/ant-wireless.mk)
++endif
++

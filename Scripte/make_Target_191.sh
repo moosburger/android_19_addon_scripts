@@ -59,7 +59,7 @@ cleanOnly=false
 
 #++++++++++++++++++++++++++++++++++#
 # Synchen des Repos
-repoSync=false
+repoSync=true
 #++++++++++++++++++++++++++++++++++#
 
 ##########################################################################################################
@@ -108,10 +108,16 @@ FilePatch[$CapPort,2]="$RootPfad/LOS/$AndroidPath/packages/modules/NetworkStack"
 
 if [ $AntPlusBuild = true ]
 then
-    AntPlus=4
-    FilePatch[$AntPlus,0]="Ant+"
-    FilePatch[$AntPlus,1]="$RootPfad/LOS/$patchfolder/$scriptFolder/Ant+/ant+AirplaneMode.patch"
-    FilePatch[$AntPlus,2]="$RootPfad/LOS/$AndroidPath/frameworks/base"
+    AntPlus1=4
+    FilePatch[$AntPlus1,0]="Ant+"
+    FilePatch[$AntPlus1,1]="$RootPfad/LOS/$patchfolder/$scriptFolder/Ant+/ant+AirplaneMode.patch"
+    FilePatch[$AntPlus1,2]="$RootPfad/LOS/$AndroidPath/frameworks/base"
+
+    AntPlus2=5
+    FilePatch[$AntPlus2,0]="Ant+"
+    FilePatch[$AntPlus2,1]="$RootPfad/LOS/$patchfolder/$scriptFolder/Ant+/device_mk.patch"
+    FilePatch[$AntPlus2,2]="$RootPfad/LOS/$AndroidPath/device/google/sunfish"
+
 fi
 
 maxArrCnt=$((${#FilePatch[@]}/3-1))
@@ -122,6 +128,7 @@ maxArrCnt=$((${#FilePatch[@]}/3-1))
             "frameworks/base"
             "packages/modules/NetworkStack"
             "packages/modules/Permission"
+            "device/google/sunfish"
 )
 
 # Generell wohl besser alle Änderungen von mir als patch beim build einzuspielen, damit könnten Kernel updates einfacher werden
@@ -615,7 +622,7 @@ do
     echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
     echo
     croot
-    python ./build/tools/releasetools/sign_target_files_apks -o -d $CertPfad/.android-certs $OUT/obj/PACKAGING/target_files_intermediates/*-target_files-*.zip $RootPfad/$target-files-signed.zip
+    #python ./build/tools/releasetools/sign_target_files_apks -o -d $CertPfad/.android-certs $OUT/obj/PACKAGING/target_files_intermediates/*-target_files-*.zip $RootPfad/$target-files-signed.zip
     sign_target_files_apks -o -d $CertPfad/.android-certs $OUT/obj/PACKAGING/target_files_intermediates/*-target_files-*.zip $RootPfad/$target-files-signed.zip
     if [ $? -ne 0 ]
     then
@@ -627,7 +634,7 @@ do
     echo "+++++++++++++++++++++++++++++++++++ OTA +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
     echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
     echo
-    python ./build/tools/releasetools/ota_from_target_files -k $CertPfad/.android-certs/releasekey --block --backup=true $RootPfad/$target-files-signed.zip $RootPfad/$target-ota-update.zip
+    #python ./build/tools/releasetools/ota_from_target_files -k $CertPfad/.android-certs/releasekey --block --backup=true $RootPfad/$target-files-signed.zip $RootPfad/$target-ota-update.zip
     ota_from_target_files -k $CertPfad/.android-certs/releasekey --block --backup=true $RootPfad/$target-files-signed.zip $RootPfad/$target-ota-update.zip
     if [ $? -ne 0 ]
     then
