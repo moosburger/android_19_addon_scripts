@@ -42,7 +42,7 @@ echo "Python Version: $version"
 
 #++++++++++++++++++++++++++++++++++#
 # Ant+ mitbauen
-AntPlusBuild=true
+AntPlusBuild=false
 #++++++++++++++++++++++++++++++++++#
 
 #++++++++++++++++++++++++++++++++++#
@@ -399,7 +399,7 @@ echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 echo "-  Anzahl Patches: $(($maxArrCnt + 1))"
 echo "- Ant+ integriert: $AntPlusBuild"
 echo "-Check Build Only: $checkBuildOnly"
-echo "-  Nur aufrauumen: $cleanOnly"
+echo "-   Nur aufraumen: $cleanOnly"
 echo "-    Repo synchen: $repoSync"
 #echo "-       Repo Pick: $repoPick"
 #echo
@@ -598,6 +598,8 @@ do
     if [ $AntPlusBuild = true ]
     then
         export BOARD_ANT_WIRELESS_DEVICE='"qualcomm-smd"'
+        [ ! -d $RootPfad/LOS/$AndroidPath/out/target/product/$target/system/etc/permissions ] &&  mkdir -p $RootPfad/LOS/$AndroidPath/out/target/product/$target/system/etc/permissions
+        cp $RootPfad/LOS/$AndroidPath/external/ant-wireless/antradio-library/com.dsi.ant.antradio_library.xml $RootPfad/LOS/$AndroidPath/out/target/product/$target/system/etc/permissions/com.dsi.ant.antradio_library.xml
     fi
     echo
     echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
@@ -666,7 +668,6 @@ securityPatchDate
 echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "+++++++++++++++++++++++++++++++++++ verschiebe Build ++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-echo
 if [ -f $RootPfad/$target-files-signed.zip ]
 then
     rm $RootPfad/$target-files-signed.zip
@@ -694,6 +695,7 @@ then
     mv $OUT/boot.img $RootPfad/$AndroidPath-$buildDate-UNOFFICIAL-boot-$target.img
 fi
 
+echo
 ##########################################################################################################
 # aufraeumen
 ##########################################################################################################

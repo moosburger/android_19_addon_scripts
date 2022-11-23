@@ -33,6 +33,15 @@ Google Camera
 #########################################################################################
 https://www.celsoazevedo.com/files/android/google-camera/dev-MWP/
 
+nach 
+vendor/google/sunfish/proprietary/product/app/GoogleCamera/GoogleCamera.apk kopieren
+
+im sunfish-vendor.mk 
+PRODUCT_PACKAGES += \
+    GoogleCamera \
+
+hinzufügen
+
 #########################################################################################
 Vorbereitung, Scripting
 #########################################################################################

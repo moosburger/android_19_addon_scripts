@@ -27,6 +27,7 @@ LOCAL_SRC_FILES := \
 
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE:= com.dsi.ant.antradio_library
+LOCAL_PRODUCT_MODULE := true
 
 include $(BUILD_JAVA_LIBRARY)
 
