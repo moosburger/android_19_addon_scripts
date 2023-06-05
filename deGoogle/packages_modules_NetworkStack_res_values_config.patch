@@ -31,3 +31,24 @@ index 805ca041..faa3edb7 100644
      </string-array>
      <!-- Configuration hooks for the above settings.
           Empty by default but may be overridden by RROs. -->
+diff --git a/src/android/net/util/NetworkStackUtils.java b/src/android/net/util/NetworkStackUtils.java
+index 81d0c08b..abd87862 100755
+--- a/src/android/net/util/NetworkStackUtils.java
++++ b/src/android/net/util/NetworkStackUtils.java
+@@ -165,14 +165,14 @@ public class NetworkStackUtils {
+      * The default list of HTTP URLs to use for detecting captive portals.
+      */
+     public static final String[] DEFAULT_CAPTIVE_PORTAL_HTTP_URLS =
+-            new String [] {"http://connectivitycheck.gstatic.com/generate_204"};
++            new String [] {"http://captiveportal.kuketz.de/generate_204"};
+ 
+     /**
+      * The default list of HTTPS URLs for network validation, to use for confirming internet
+      * connectivity.
+      */
+     public static final String[] DEFAULT_CAPTIVE_PORTAL_HTTPS_URLS =
+-            new String [] {"https://www.google.com/generate_204"};
++            new String [] {"https://captiveportal.kuketz.de/generate_204"};
+ 
+     /**
+      * @deprecated Considering boolean experiment flag is likely to cause misconfiguration
