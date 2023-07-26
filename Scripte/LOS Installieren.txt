@@ -1,0 +1,24 @@
+Bereits mal LOS installiert:
+
+1: Am SmartPhone
+- Boote in den Recovery Mode (Neustart und LautstärkeTaste auf Leise, bzw. beim erweiterten Menü Recovery auswählen)
+- Apply Update
+- Apply from ADB
+
+2: Am Rechner 
+- adb sideload filename.zip
+
+3: Am Smartphone
+- Verfication failed kommt, mit YES weitermachen
+- Wenn beendet, zurück und System neu starten.
+
+4: Mit Magisk recovery_filename.img patchen
+- Das recovery_filename.img auf das Smartphone kopieren
+- Magisk starten, die Datei zum patchen auswählen
+- gepachte Datei auf den Rechner kopieren
+
+5: 
+- smartphone in den bootloader mode booten
+- fastboot devices
+- fastboot flash boot <gepachte recovery_filename.img>
+- fastboot devices

@@ -62,6 +62,13 @@ cleanOnly=false
 repoSync=true
 #++++++++++++++++++++++++++++++++++#
 
+#++++++++++++++++++++++++++++++++++#
+# RepoPick, wenn Gerrit nicht rechtzeitig gepusht wurde
+repoPick=false
+# der zu pickende Commit
+gerritSecurityPatch=S_asb_2023-02
+#++++++++++++++++++++++++++++++++++#
+
 ##########################################################################################################
 # Definitionen
 ##########################################################################################################
@@ -106,14 +113,27 @@ FilePatch[$CapPort,0]="Captive Portal check"
 FilePatch[$CapPort,1]="$RootPfad/LOS/$patchfolder/$scriptFolder/deGoogle/packages_modules_NetworkStack_res_values_config.patch"
 FilePatch[$CapPort,2]="$RootPfad/LOS/$AndroidPath/packages/modules/NetworkStack"
 
+SUPL=4
+FilePatch[$SUPL,0]="SUPL No IMSI"
+FilePatch[$SUPL,1]="$RootPfad/LOS/$patchfolder/$scriptFolder/deGoogle/SUPL_No_IMSI.patch"
+FilePatch[$SUPL,2]="$RootPfad/LOS/$AndroidPath/frameworks/base"
+
+# Nicht verwenden in LOS 19.1 führt zum Absturz der Einstellungen->App
+#DisStat=5
+#FilePatch[$DisStat,0]="Disable_usage_stats"
+#FilePatch[$DisStat,1]="$RootPfad/LOS/$patchfolder/$scriptFolder/deGoogle/Disable_usage_stats.patch"
+#FilePatch[$DisStat,2]="$RootPfad/LOS/$AndroidPath/frameworks/base"
+
+lastCnt=$SUPL
+
 if [ $AntPlusBuild = true ]
 then
-    AntPlus1=4
+    AntPlus1=$lastCnt + 1
     FilePatch[$AntPlus1,0]="Ant+"
     FilePatch[$AntPlus1,1]="$RootPfad/LOS/$patchfolder/$scriptFolder/Ant+/ant+AirplaneMode.patch"
     FilePatch[$AntPlus1,2]="$RootPfad/LOS/$AndroidPath/frameworks/base"
 
-    AntPlus2=5
+    AntPlus2= AntPlus1 + 1
     FilePatch[$AntPlus2,0]="Ant+"
     FilePatch[$AntPlus2,1]="$RootPfad/LOS/$patchfolder/$scriptFolder/Ant+/device_mk.patch"
     FilePatch[$AntPlus2,2]="$RootPfad/LOS/$AndroidPath/device/google/sunfish"
@@ -124,7 +144,6 @@ maxArrCnt=$((${#FilePatch[@]}/3-1))
 
 # Pfade zum resetten der Patches
             patchUndo=("vendor/lineage"
-            "packages/apps/PermissionController"
             "frameworks/base"
             "packages/modules/NetworkStack"
             "packages/modules/Permission"
@@ -209,6 +228,13 @@ function newPatchesAvailable {
     echo - Security Patch Level lokal  : $LOCAL
 
     REMOTE=$(curl -sS https://github.com/LineageOS/android_build/blob/$AndroidPath/core/version_defaults.mk | grep -Eoi 'PLATFORM_SECURITY_PATCH</span> := [0-9]{4}-[0-9]{2}-[0-9]{2}' | sed  s@'PLATFORM_SECURITY_PATCH</span> := '@''@)
+
+    if [ ${#REMOTE} = 0 ]
+    then
+        REMOTE=$(curl -sS https://github.com/LineageOS/android_build/blob/$AndroidPath/core/version_defaults.mk | grep -Eoi 'PLATFORM_SECURITY_PATCH := [0-9]{4}-[0-9]{2}-[0-9]{2}' | sed  s@'PLATFORM_SECURITY_PATCH := '@''@)
+    fi
+
+
     echo - Security Patch Level remote: $REMOTE
 
     # wenn laenge = 0 keine verbindung zum server
@@ -271,10 +297,10 @@ function prepCache {
         echo - make Clean
         make clean
 
-        if [ -f $RootPfad/LOS/$AndroidPath/.repo/projects/external/chromium-webview.git/shallow.lock ]
-        then
-            rm $RootPfad/LOS/$AndroidPath/.repo/projects/external/chromium-webview.git/shallow.lock
-        fi
+#        if [ -f $RootPfad/LOS/$AndroidPath/.repo/projects/external/chromium-webview.git/shallow.lock ]
+  #      then
+   #         rm $RootPfad/LOS/$AndroidPath/.repo/projects/external/chromium-webview.git/shallow.lock
+     #   fi
     fi
 
     # Cache Einstellungen
@@ -410,13 +436,13 @@ whatToBuild
 # Nur aufraeumen
 if [ $cleanOnly = true ]
 then
-    removeGitPatches
     restoreBuildEnv
+    removeGitPatches
     echo
-        if [ -f $RootPfad/LOS/$AndroidPath/.repo/projects/external/chromium-webview.git/shallow.lock ]
-        then
-            rm $RootPfad/LOS/$AndroidPath/.repo/projects/external/chromium-webview.git/shallow.lock
-        fi
+#        if [ -f $RootPfad/LOS/$AndroidPath/.repo/projects/external/chromium-webview.git/shallow.lock ]
+  #      then
+    #        rm $RootPfad/LOS/$AndroidPath/.repo/projects/external/chromium-webview.git/shallow.lock
+      #  fi
     exit
 fi
 
@@ -436,6 +462,7 @@ echo
 echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "+++++++++++++++++++++++++++++++++++ Init Repo +++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+echo - $RepoCmd init -u https://github.com/LineageOS/android.git -b $AndroidPath
 $RepoCmd init -u https://github.com/LineageOS/android.git -b $AndroidPath
 
 if [ $? -ne 0 ]
@@ -462,6 +489,21 @@ fi
 # Environment aufetzen
 cd $RootPfad/LOS/$AndroidPath
 source build/envsetup.sh
+
+if [ $repoPick = true ]
+then
+    echo
+    echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+    echo "+++++++++++++++++++++++++++++++++++ Repo Cherry Pick ++++++++++++++++++++++++++++++++++++++++++++++++"
+    echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+    echo - repoPick
+    #repopick_topic $gerritSecurityPatch
+    repopick -t $gerritSecurityPatch
+    if [ $? -ne 0 ]
+    then
+        quit "repopick" "456"
+    fi
+fi
 
 ##########################################################################################################
 # Android Security Patch Level auslesen
@@ -566,6 +608,12 @@ do
     rm -rf ./vendor/lineage/bootanimation/desc.txt
     cp -r $RootPfad/LOS/$patchfolder/$scriptFolder/BootAnimation/bootanimationRing/bootanimation.tar ./vendor/lineage/bootanimation/bootanimation.tar
     cp -r $RootPfad/LOS/$patchfolder/$scriptFolder/BootAnimation/bootanimationRing/desc.txt ./vendor/lineage/bootanimation/desc.txt
+    echo - done
+    echo
+
+    echo - Volume Steps patchen
+    rm -rf ./device/google/sunfish/device.mk
+    cp -r $RootPfad/LOS/$patchfolder/$scriptFolder/VolumeSteps/device.mk ./device/google/sunfish/device.mk
     echo - done
 
     echo
