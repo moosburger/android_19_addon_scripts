@@ -1,7 +1,0 @@
-/media/dejhgp07/Data/Android/LOS/lineage19.1/device/google/sunfish/extract-files.sh /media/dejhgp07/Data/Android/StockRom/sunfish-sq3a.220705.003.a1/image-sunfish-sq3a.220705.003.a1
-
-
-
-
-patch -p1 -i /media/dejhgp07/Data/Android/LOS/packages/android_frameworks_base-S.patch
-patch -p1 -i /media/dejhgp07/Data/Android/LOS/packages/packages_modules_Permission-S.patch

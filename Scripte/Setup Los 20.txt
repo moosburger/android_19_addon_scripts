@@ -1,0 +1,130 @@
+
+#########################################################################################
+notwendige Tools, wenn Cinnamon über Wasta Linux oder so installiert wurde, 
+diese Repos aktivieren, sonst können die *-dev Dateien nicht installiert werden
+#########################################################################################
+sudo apt-get install bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev libelf-dev liblz4-tool libncurses5 libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev openjdk-8-jdk abootimg libcurl4-openssl-dev nss-updatedb
+
+For Ubuntu versions older than 20.04 (focal), install also:
+sudo apt-get install
+libwxgtk3.0-gtk3-dev
+
+
+Large File support für GIT
+die InstallerDatei passend zur Ubuntu Version runterladen
+https://packagecloud.io/github/git-lfs
+Datei entpacken und ins Verzeichnis wechseln
+git lfs install
+
+#########################################################################################
+java.security
+#########################################################################################
+In der Java Datei ./etc/java-8-openjdk/security/java.security
+unter
+jdk.tls.disabledAlgorithms
+die beiden TLSv1, TLSv1.1 entfernen
+
+#########################################################################################
+microg
+#########################################################################################
+https://github.com/lineageos4microg
+android_vendor_partner_gms clonen
+
+#########################################################################################
+Ant+
+#########################################################################################
+den modifzierten Ordner android_external_ant-wireless nach external/ant-wireless kopieren
+vorhandenen Ordner löschen
+neuen reinkopieren,
+.git Ordner darin dann löschen
+
+in device/google/sunfish/device.mk einfügen
+# Ant+ Support
+ifneq ($(BOARD_ANT_WIRELESS_DEVICE),)
+$(call inherit-product, external/ant-wireless/build/ant-wireless.mk)
+endif
+
+#########################################################################################
+Google Camera
+#########################################################################################
+https://www.celsoazevedo.com/files/android/google-camera/dev-MWP/
+
+nach 
+vendor/google/sunfish/proprietary/product/app/GoogleCamera/GoogleCamera.apk kopieren
+
+im sunfish-vendor.mk
+PRODUCT_PACKAGES += \
+    GoogleCamera \
+
+und im Android.bp
+
+android_app_import {
+	name: "GoogleCamera",
+	owner: "google",
+	apk: "proprietary/product/app/GoogleCamera/GoogleCamera.apk",
+	presigned: true,
+	dex_preopt: {
+		enabled: false,
+	},
+	product_specific: true,
+}
+ 
+hinzufügen
+
+#########################################################################################
+gps.conf
+#########################################################################################
+die modifizierte gps.conf in den Ordner 
+vendor/google/sunfish/proprietary/vendor/etc kopieren
+
+
+im sunfish-vendor.mk unter 
+PRODUCT_COPY_FILES += \
+
+in der nähe von FOSSConfig.xml
+dies
+    vendor/google/sunfish/proprietary/vendor/etc/gps.conf:$(TARGET_COPY_OUT_VENDOR)/etc/gps.conf \
+   hinzufügen   
+    
+#########################################################################################
+Vorbereitung, Scripting
+#########################################################################################
+in den Vendor Ordner den partner_gms Ordner kopieren
+die Signature Spoofing Patches ausführen 
+- android_frameworks_base-S.patch
+- packages_modules_Permission-S.patch
+
+vendor/lineage/overlay erstellen
+- mkdir -p "$RootPfad/LOS/$AndroidPath/vendor/lineage/overlay/microg/frameworks/base/core/res/res/values/"
+
+nach dem croot Aufruf die export Zeile einfügen
+
+für microG support
+- export WITH_GMS=true
+
+
+Ant+
+- export BOARD_ANT_WIRELESS_DEVICE='"qualcomm-smd"'
+
+Google Kamera kopieren
+- vorhandene löschen -> rm -rf ./vendor/google/sunfish/proprietary/product/app/GoogleCamera/GoogleCamera.apk
+- neue kopieren ->  cp -r $RootPfad/LOS/$patchfolder/$appfolder/GoogleCamera/Gcam_8.3.252_V2.0c_MWP.apk ./vendor/google/sunfish/proprietary/product/app/GoogleCamera/GoogleCamera.apk
+
+
+#########################################################################################
+Audio Volume Steps erhöhen
+#########################################################################################
+In .device/google/sunfish die Datei device.mk patchen
+
+# Audio fluence, ns, aec property, voice and media volume steps
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.vendor.audio.sdk.fluencetype=fluencepro \
+    persist.vendor.audio.fluence.voicecall=true \
+    persist.vendor.audio.fluence.speaker=true \
+    persist.vendor.audio.fluence.voicecomm=true \
+    persist.vendor.audio.fluence.voicerec=false \
+    ro.config.vc_call_vol_steps=11 \
+    ro.config.media_vol_steps=150 \
+    ro.config.alarm_vol_steps=15 \
+    ro.config.system_vol_steps=15 \
+

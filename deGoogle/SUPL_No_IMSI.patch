@@ -2,21 +2,19 @@ diff --git a/services/core/java/com/android/server/location/gnss/GnssLocationPro
 index 9956da274263..bf18740b0590 100644
 --- a/services/core/java/com/android/server/location/gnss/GnssLocationProvider.java
 +++ b/services/core/java/com/android/server/location/gnss/GnssLocationProvider.java
-@@ -1605,6 +1605,13 @@ public class GnssLocationProvider extends AbstractLocationProvider implements
-         if (SubscriptionManager.isValidSubscriptionId(ddSubId)) {
-             phone = phone.createForSubscriptionId(ddSubId);
+@@ -1748,6 +1748,11 @@ public class GnssLocationProvider extends AbstractLocationProvider implements
+         if (SubscriptionManager.isValidSubscriptionId(subId)) {
+             phone = phone.createForSubscriptionId(subId);
          }
-+ 
-+        /*
++    /*
 +         * We don't want to tell Google our IMSI or phone number to spy on us!
 +         * As devices w/o SIM card also have working GPS, providing this data does
 +         * not seem to add a lot of value, at least not for the device holder
 +         *
-+
          if ((flags & AGPS_REQUEST_SETID_IMSI) == AGPS_REQUEST_SETID_IMSI) {
              setId = phone.getSubscriberId();
              if (setId != null) {
-@@ -1617,7 +1624,7 @@ public class GnssLocationProvider extends AbstractLocationProvider implements
+@@ -1760,7 +1765,7 @@ public class GnssLocationProvider extends AbstractLocationProvider implements
                  // This means the framework has the SIM card.
                  type = AGPS_SETID_TYPE_MSISDN;
              }

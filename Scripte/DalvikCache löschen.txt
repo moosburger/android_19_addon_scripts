@@ -1,0 +1,4 @@
+Mit dem 
+root explorer in den Ordner 
+/data/dalvik-cache 
+gehen und dort alles löschen

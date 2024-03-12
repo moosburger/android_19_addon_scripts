@@ -1,0 +1,3 @@
+Die Gps.conf als gps.conf.txt in den vendoe.etc kopieren und mitbauen.
+
+Dann nach dem build aktivieren

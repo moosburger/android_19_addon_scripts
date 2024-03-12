@@ -5,7 +5,10 @@ Bereits mal LOS installiert:
 - Apply Update
 - Apply from ADB
 
-2: Am Rechner 
+ODER am Rechner
+adb -d reboot sideload
+
+2: Am Rechner
 - adb sideload filename.zip
 
 3: Am Smartphone
@@ -17,8 +20,9 @@ Bereits mal LOS installiert:
 - Magisk starten, die Datei zum patchen auswählen
 - gepachte Datei auf den Rechner kopieren
 
-5: 
+5:
 - smartphone in den bootloader mode booten
+- adb -d reboot bootloader
 - fastboot devices
 - fastboot flash boot <gepachte recovery_filename.img>
 - fastboot devices
