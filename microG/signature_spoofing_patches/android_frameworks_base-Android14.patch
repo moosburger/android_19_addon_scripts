@@ -1,15 +1,16 @@
 diff --git a/core/api/current.txt b/core/api/current.txt
+index 288ab479c0fb..2124d89c6e6f 100644
 --- a/core/api/current.txt
 +++ b/core/api/current.txt
-@@ -87,6 +87,7 @@ package android {
-     field public static final String DUMP = "android.permission.DUMP";
+@@ -95,6 +95,7 @@ package android {
+     field public static final String EXECUTE_APP_ACTION = "android.permission.EXECUTE_APP_ACTION";
      field public static final String EXPAND_STATUS_BAR = "android.permission.EXPAND_STATUS_BAR";
      field public static final String FACTORY_TEST = "android.permission.FACTORY_TEST";
 +    field public static final String FAKE_PACKAGE_SIGNATURE = "android.permission.FAKE_PACKAGE_SIGNATURE";
      field public static final String FOREGROUND_SERVICE = "android.permission.FOREGROUND_SERVICE";
-     field public static final String GET_ACCOUNTS = "android.permission.GET_ACCOUNTS";
-     field public static final String GET_ACCOUNTS_PRIVILEGED = "android.permission.GET_ACCOUNTS_PRIVILEGED";
-@@ -222,6 +223,7 @@ package android {
+     field public static final String FOREGROUND_SERVICE_CAMERA = "android.permission.FOREGROUND_SERVICE_CAMERA";
+     field public static final String FOREGROUND_SERVICE_CONNECTED_DEVICE = "android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE";
+@@ -326,6 +327,7 @@ package android {
      field public static final String CALL_LOG = "android.permission-group.CALL_LOG";
      field public static final String CAMERA = "android.permission-group.CAMERA";
      field public static final String CONTACTS = "android.permission-group.CONTACTS";
@@ -18,9 +19,10 @@ diff --git a/core/api/current.txt b/core/api/current.txt
      field public static final String MICROPHONE = "android.permission-group.MICROPHONE";
      field public static final String NEARBY_DEVICES = "android.permission-group.NEARBY_DEVICES";
 diff --git a/core/res/AndroidManifest.xml b/core/res/AndroidManifest.xml
+index 14cb052b121f..593999bc4ef7 100644
 --- a/core/res/AndroidManifest.xml
 +++ b/core/res/AndroidManifest.xml
-@@ -3542,6 +3542,21 @@
+@@ -4258,6 +4258,22 @@
          android:description="@string/permdesc_getPackageSize"
          android:protectionLevel="normal" />
  
@@ -39,16 +41,19 @@ diff --git a/core/res/AndroidManifest.xml b/core/res/AndroidManifest.xml
 +        android:label="@string/permlab_fakePackageSignature"
 +        android:description="@string/permdesc_fakePackageSignature" />
 +
++	
      <!-- @deprecated No longer useful, see
           {@link android.content.pm.PackageManager#addPackageToPreferred}
           for details. -->
 diff --git a/core/res/res/values/strings.xml b/core/res/res/values/strings.xml
+index 9c018c30f9e3..661297bab701 100644
 --- a/core/res/res/values/strings.xml
 +++ b/core/res/res/values/strings.xml
-@@ -974,6 +974,18 @@
+@@ -990,6 +990,19 @@
+     <string name="dream_preview_title">Preview, <xliff:g id="dream_name" example="Clock">%1$s</xliff:g></string>
  
      <!--  Permissions -->
- 
++    
 +    <!-- Title of an application permission, listed so the user can choose whether they want to allow the application to do this. -->
 +    <string name="permlab_fakePackageSignature">Spoof package signature</string>
 +    <!-- Description of an application permission, listed so the user can choose whether they want to allow the application to do this. -->
@@ -61,17 +66,18 @@ diff --git a/core/res/res/values/strings.xml b/core/res/res/values/strings.xml
 +    <string name="permgrouprequest_fake_package_signature">Allow
 +        &lt;b><xliff:g id="app_name" example="Gmail">%1$s</xliff:g>&lt;/b> to spoof package signature?</string>
 +
+ 
      <!-- Title of an application permission, listed so the user can choose whether they want to allow the application to do this. -->
      <string name="permlab_statusBar">disable or modify status bar</string>
-     <!-- Description of an application permission, listed so the user can choose whether they want to allow the application to do this. -->
 diff --git a/services/core/java/com/android/server/pm/ComputerEngine.java b/services/core/java/com/android/server/pm/ComputerEngine.java
+index 78f1fa60b69f..1e29d3697b89 100644
 --- a/services/core/java/com/android/server/pm/ComputerEngine.java
 +++ b/services/core/java/com/android/server/pm/ComputerEngine.java
-@@ -1603,6 +1603,29 @@ public class ComputerEngine implements Computer {
+@@ -1450,6 +1450,29 @@ public class ComputerEngine implements Computer {
          return result;
      }
  
-+    private boolean requestsFakeSignature(AndroidPackage p) {
++        private boolean requestsFakeSignature(AndroidPackage p) {
 +        return p.getMetaData() != null &&
 +                p.getMetaData().getString("fake-signature") != null;
 +    }
@@ -97,22 +103,22 @@ diff --git a/services/core/java/com/android/server/pm/ComputerEngine.java b/serv
      public final PackageInfo generatePackageInfo(PackageStateInternal ps,
              @PackageManager.PackageInfoFlagsBits long flags, int userId) {
          if (!mUserManager.exists(userId)) return null;
-@@ -1632,13 +1655,15 @@ public class ComputerEngine implements Computer {
-             final int[] gids = (flags & PackageManager.GET_GIDS) == 0 ? EMPTY_INT_ARRAY
-                     : mPermissionManager.getGidsForUid(UserHandle.getUid(userId, ps.getAppId()));
+@@ -1483,13 +1506,15 @@ public class ComputerEngine implements Computer {
+                     || ArrayUtils.isEmpty(p.getPermissions())) ? Collections.emptySet()
+                     : mPermissionManager.getInstalledPermissions(ps.getPackageName());
              // Compute granted permissions only if package has requested permissions
--            final Set<String> permissions = ((flags & PackageManager.GET_PERMISSIONS) == 0
-+            final Set<String> permissions = (((flags & PackageManager.GET_PERMISSIONS) == 0
+-            final Set<String> grantedPermissions = ((flags & PackageManager.GET_PERMISSIONS) == 0
++            final Set<String> grantedPermissions =  (((flags & PackageManager.GET_PERMISSIONS) == 0
 +                        && !requestsFakeSignature(p))
                      || ArrayUtils.isEmpty(p.getRequestedPermissions())) ? Collections.emptySet()
                      : mPermissionManager.getGrantedPermissions(ps.getPackageName(), userId);
  
 -            PackageInfo packageInfo = PackageInfoUtils.generate(p, gids, flags,
 +            PackageInfo packageInfo = mayFakeSignature(p, PackageInfoUtils.generate(p, gids, flags,
-                     state.getFirstInstallTime(), ps.getLastUpdateTime(), permissions, state, userId,
--                    ps);
-+                    ps),
-+                    permissions);
+                     state.getFirstInstallTimeMillis(), ps.getLastUpdateTime(), installedPermissions,
+-                    grantedPermissions, state, userId, ps);
++                    grantedPermissions, state, userId, ps),
++		    grantedPermissions);
  
              if (packageInfo == null) {
                  return null;
